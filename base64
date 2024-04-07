@@ -1,0 +1,41 @@
+#simple script for encrypting and decrytping base64. Written for use in CTF challenges.
+
+import base64
+
+def encrypt(text):
+    encrypted_bytes = base64.b64encode(text.encode('utf-8'))
+    encrypted_text = encrypted_bytes.decode('utf-8')
+    return encrypted_text
+
+def decrypt(encrypted_text):
+    decrypted_bytes = base64.b64decode(encrypted_text.encode('utf-8'))
+    decrypted_text = decrypted_bytes.decode('utf-8')
+    return decrypted_text
+
+def main():
+    print("Welcome to the Base64 Encryptor/Decryptor!")
+    
+    while True:
+        print("\nChoose an action:")
+        print("1. Encrypt")
+        print("2. Decrypt")
+        print("3. Quit")
+        
+        choice = input("Enter your choice: ")
+        
+        if choice == '1':
+            text = input("Enter the text to encrypt: ")
+            encrypted_text = encrypt(text)
+            print("Encrypted:", encrypted_text)
+        elif choice == '2':
+            encrypted_text = input("Enter the text to decrypt: ")
+            decrypted_text = decrypt(encrypted_text)
+            print("Decrypted:", decrypted_text)
+        elif choice == '3':
+            print("Exiting the program.")
+            break
+        else:
+            print("Invalid choice. Please select 1, 2, or 3.")
+
+if __name__ == "__main__":
+    main()
