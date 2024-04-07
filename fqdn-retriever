@@ -1,0 +1,13 @@
+#get FQDN (if available) in a simple step
+
+import socket
+
+def get_fqdn(ip_address):
+    try:
+        fqdn = socket.gethostbyaddr(ip_address)[0]
+        return fqdn
+    except socket.herror:
+        return "FQDN not found"
+
+ip_address = "RHOST"
+print(get_fqdn(ip_address))
