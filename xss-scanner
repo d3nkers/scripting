@@ -1,0 +1,46 @@
+# XSS python scanner used to solve a few simple XSS challenges. 
+# The script only check GET requests
+# Script assumes that the XSS payloads are stored in a file named payload.txt and the domain name is stored in a file named domain.txt.
+
+
+import requests
+
+# Function to read payloads from file
+def read_payloads():
+    with open('payload.txt', 'r') as file:
+        payloads = file.readlines()
+    return [payload.strip() for payload in payloads]
+
+# Function to read domain name from file
+def read_domain():
+    with open('domain.txt', 'r') as file:
+        domain = file.readline().strip()
+    return domain
+
+# Function to test XSS vulnerability
+def test_xss(domain, payload):
+    url = f'http://{domain}'
+    response = requests.get(url)
+
+    # Check if response indicates the presence of an input field
+    if 'input' in response.text:
+        print(f"Potential input field found on {domain}")
+        # Inject payload and check if it reflects in the response
+        payload_url = f"{url}?payload={payload}"
+        response_with_payload = requests.get(payload_url)
+        if payload in response_with_payload.text:
+            print(f"XSS vulnerability detected on {domain} with payload: {payload}")
+        else:
+            print(f"No XSS vulnerability detected on {domain} with payload: {payload}")
+    else:
+        print(f"No potential input field found on {domain}")
+
+def main():
+    domain = read_domain()
+    payloads = read_payloads()
+
+    for payload in payloads:
+        test_xss(domain, payload)
+
+if __name__ == "__main__":
+    main()
