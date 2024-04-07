@@ -1,0 +1,24 @@
+#Script that automates the proces of putting interface in monitor mode for pentesting Wi-Fi
+
+import subprocess
+
+def enable_monitor_mode(interface):
+    try:
+        # Check if NetworkManager is running and stop it
+        subprocess.run(['systemctl', 'stop', 'NetworkManager'], check=True)
+
+        # Put the wireless interface into monitor mode
+        subprocess.run(['airmon-ng', 'start', interface], check=True)
+
+        print(f"Wireless interface {interface} is now in monitor mode.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+    finally:
+        # Restart NetworkManager to manage the interfaces
+        subprocess.run(['systemctl', 'start', 'NetworkManager'], check=True)
+
+if __name__ == "__main__":
+    # Specify the name of the wireless interface you want to put into monitor mode
+    wifi_interface = "wlan0"  # Change this to your interface name
+
+    enable_monitor_mode(wifi_interface)
