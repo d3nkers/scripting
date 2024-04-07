@@ -1,0 +1,55 @@
+#This tool can be used to enumerate DNS records. 
+#Only used in CTF, I did not test how "noisy" this script is.
+
+  import dns.resolver
+from colorama import init,Fore
+# Initialize colorama (only needed on Windows)
+init()
+
+banner = f"""
+{Fore.RED}  D   N   S{Fore.RESET}
+{Fore.RED}  T O O L{Fore.RESET}
+"""
+
+# Print the banner 
+print(Fore.RED + banner)
+print(Fore.RESET)
+
+# Your main code goes here
+print("DNS Enumeration Tool")
+# Set the record types
+record_types = [
+    ("A", "IPv4 Address"),
+    ("AAAA", "IPv6 Address"),
+    ("CNAME", "Canonical Name"),
+    ("MX", "Mail Exchanger"),
+    ("NS", "Name Server"),
+    ("SOA", "Start of Authority"),
+    ("TXT", "Text"),
+]
+
+def perform_dns_lookup(domain, record_type):
+    resolver = dns.resolver.Resolver()
+    try:
+        answers = resolver.resolve(domain, record_type)
+    except dns.resolver.NoAnswer:
+        return None
+    return answers
+
+def print_records(target_domain, records):
+    print(f"Performing DNS lookup for {target_domain}...")
+    for record_type, description in records:
+        answers = perform_dns_lookup(target_domain, record_type)
+        if answers:
+            print(f"{description} records for {target_domain}:")
+            for rdata in answers:
+                print(f" {rdata}")
+
+def main():
+    # Get user input for the target domain
+    target_domain = input("Enter the target domain: ").strip()
+
+    print_records(target_domain, record_types)
+
+if __name__ == "__main__":
+    main()
