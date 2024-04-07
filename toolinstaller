@@ -1,0 +1,75 @@
+#This script makes it easy to install uncommon or personal tools via github. Create the list with tools, run the script and it will install if the files are available.
+#Handy when you use a random VM or distro without tools.
+
+import os
+import subprocess
+import tkinter as tk
+from tkinter import messagebox
+from tkinter.simpledialog import askstring
+
+# Function to read the tool list from the file
+def read_tool_list(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as file:
+            tools = file.read().splitlines()
+            return tools
+    else:
+        return None
+
+# Function to install tools with sudo rights
+def install_tools(tools, sudo_password):
+    status_label.config(text="Installing tools...")
+    for tool in tools:
+        try:
+            subprocess.run(['sudo', '-S', 'apt-get', 'install', '-y', tool], input=sudo_password, text=True)
+            status_label.config(text=f"Installed {tool}")
+        except Exception as e:
+            status_label.config(text=f"Error installing {tool}")
+
+    status_label.config(text="Process completed.")
+
+# Function to start the installation process
+def start_installation():
+    tools = read_tool_list("toolz.txt")
+    if tools is None:
+        messagebox.showwarning("Warning", "Tool list not supplied")
+        return
+
+    sudo_password = None
+
+    # Check if the 'my_credentials.txt' file exists on the Desktop
+    desktop_path = os.path.expanduser("~/Desktop")
+    credentials_file_path = os.path.join(desktop_path, "my_credentials.txt")
+    
+    if os.path.exists(credentials_file_path):
+        with open(credentials_file_path, 'r') as file:
+            lines = file.read().splitlines()
+            if len(lines) >= 2:
+                sudo_password = lines[1]
+
+    if sudo_password is None:
+        response = askstring("Password", "Enter your sudo password:")
+        if response is not None:
+            sudo_password = response
+
+    if sudo_password:
+        install_tools(tools, sudo_password)
+
+# Function to exit the script
+def exit_script():
+    root.destroy()
+
+# GUI setup
+root = tk.Tk()
+root.title("Tool Installer")
+
+status_label = tk.Label(root, text="")
+status_label.pack()
+
+install_button = tk.Button(root, text="Start Installation", command=start_installation)
+install_button.pack()
+
+exit_button = tk.Button(root, text="Exit", command=exit_script)
+exit_button.pack()
+
+root.mainloop()
