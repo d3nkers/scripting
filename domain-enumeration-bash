@@ -1,0 +1,96 @@
+#Original code by HTB academy but i changed it a little for a better overview of the results and added a logfile function
+
+#!/bin/bash
+
+# Log file path
+LOG_FILE="log123.txt"
+
+# Function to log messages to the log file
+function log_message {
+    echo "$(date +"%Y-%m-%d %T") $1" >> "$LOG_FILE"
+}
+
+# Function to handle the errors
+function handle_error {
+    local error_message="$1"
+    echo "Error: $error_message"
+    echo "Please check the log file $LOG_FILE for more details."
+    echo "You may try running the script again."
+    log_message "Error: $error_message"
+    exit 1
+}
+
+# Check for provided arguments
+if [ $# -eq 0 ]; then
+    handle_error "No target domain provided."
+else
+    domain=$1
+fi
+
+# Input validation for domain
+if ! host "$domain" &> /dev/null; then
+    handle_error "Invalid domain: $domain"
+fi
+
+# Function to identify network range for specified IP address(es)
+function network_range {
+    for ip in $ipaddr; do
+        netrange=$(whois "$ip" | grep "NetRange\|CIDR" | tee -a CIDR.txt)
+        cidr=$(whois "$ip" | grep "CIDR" | awk '{print $2}')
+        cidr_ips=$(prips "$cidr")
+        echo -e "\nNetRange for $ip:"
+        echo -e "$netrange"
+        log_message "NetRange for $ip: $netrange"
+    done
+}
+
+# Function to ping discovered IP address(es)
+function ping_host {
+    hosts_up=0
+    hosts_total=0
+    
+    echo -e "\nPinging host(s):"
+    for host in $cidr_ips; do
+        stat=1
+        while [ $stat -eq 1 ]; do
+            ping -c 2 "$host" > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo "$host is up."
+                ((stat--))
+                ((hosts_up++))
+                ((hosts_total++))
+            else
+                echo "$host is down."
+                ((stat--))
+                ((hosts_total++))
+            fi
+        done
+    done
+    
+    echo -e "\n$hosts_up out of $hosts_total hosts are up."
+    log_message "$hosts_up out of $hosts_total hosts are up."
+}
+
+# Identify IP address of the specified domain
+hosts=$(host "$domain" | grep "has address" | cut -d" " -f4 | tee discovered_hosts.txt)
+
+echo -e "Discovered IP address:\n$hosts\n"
+log_message "Discovered IP address: $hosts"
+
+ipaddr=$(host "$domain" | grep "has address" | cut -d" " -f4 | tr "\n" " ")
+
+# Available options
+echo -e "Additional options available:"
+echo -e "\t1) Identify the corresponding network range of the target domain."
+echo -e "\t2) Ping discovered hosts."
+echo -e "\t3) Perform all checks."
+echo -e "\t*) Exit.\n"
+
+read -p "Select your option: " opt
+
+case $opt in
+    "1") network_range ;;
+    "2") ping_host ;;
+    "3") network_range && ping_host ;;
+    *) exit 0 ;;
+esac
