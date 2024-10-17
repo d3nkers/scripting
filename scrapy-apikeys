@@ -1,0 +1,36 @@
+#This script has been used in the module Gathering web edition. This is used to answer to attempt to find the API key in the recursive folder structure to hide it
+#It worked for me, maybe also for you but i dont give any support on this script. I've writting this script so it is lightweight, not much of logging or saving data
+#Feel free te use and change the code as you want
+
+import scrapy
+
+class DevSpider(scrapy.Spider):
+    name = "devspider"
+    allowed_domains = ['dev.web1337.inlanefreight.htb']
+    start_urls = ['http://dev.web1337.inlanefreight.htb:54952']
+
+    custom_settings = {
+        'DOWNLOAD_DELAY': 1,  # Introduce a delay to reduce load on the server
+        'CONCURRENT_REQUESTS': 16,  # Limit concurrent requests to reduce resource usage
+        'LOG_LEVEL': 'ERROR',  # Reduce log verbosity to save space
+        'HTTPCACHE_ENABLED': True,  # Enable HTTP caching to avoid redundant requests
+    }
+
+    def parse(self, response):
+        # Follow all links in the page
+        for href in response.css('a::attr(href)').getall():
+            yield response.follow(href, self.parse)
+
+        # Capture API keys or any other info
+        if "API" in response.text:
+            yield {
+                'url': response.url,
+                'api_key': self.extract_api_key(response.text)  # Extract API key more efficiently
+            }
+
+    def extract_api_key(self, text):
+        # A simple method to extract API keys from the response text
+        # This can be customized based on the expected format of the API key
+        import re
+        api_keys = re.findall(r'API\s*key:\s*([A-Za-z0-9]+)', text)
+        return api_keys if api_keys else None
